@@ -1,5 +1,6 @@
 import './styles/main.css';
 import { renderer, scene, camera, onResize } from './core/engine.js';
+import { updateQuality, onQualityChange } from './core/quality.js';
 import { updateWorld } from './world/index.js';
 import { G } from './game/state.js';
 import { updateShip } from './game/ship.js';
@@ -43,6 +44,7 @@ renderMute();
 
 initInput({ flare: deployFlares, horn, pause: togglePause, toggleTech, toggleMute, start, canStart: isScreenOpen });
 onResize(updatePointScale);
+onQualityChange(updatePointScale);
 updatePointScale();
 
 reset();
@@ -68,7 +70,11 @@ function update(dt) {
   setEngineLevel(G.mode === 'play' ? 0.05 + G.ship.speed * 0.006 : 0.02);
 }
 
-let last = performance.now();
+// The shadow map only needs to keep up with what a display can show.
+const SHADOW_INTERVAL = 1000 / 60;
+renderer.shadowMap.autoUpdate = false;
+
+let last = performance.now(), lastShadow = 0;
 
 // Desktop runs uncapped: MessageChannel fires as fast as the CPU/GPU allow, unlike
 // requestAnimationFrame, which is locked to the display refresh rate.
@@ -86,7 +92,12 @@ function frame(now) {
   const realDt = (now - last) / 1000;
   last = now;
   update(G.paused ? 0 : Math.min(MAX_DT, realDt));
+  if (now - lastShadow >= SHADOW_INTERVAL) {
+    renderer.shadowMap.needsUpdate = true;
+    lastShadow = now;
+  }
   renderer.render(scene, camera);
+  updateQuality(realDt);
   updateTech(realDt, performance.now() - t0);
 }
 

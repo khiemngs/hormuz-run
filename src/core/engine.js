@@ -1,7 +1,11 @@
 import * as THREE from 'three';
 import { FOG_COLOR, FOG_NEAR, FOG_FAR, IS_TOUCH } from '../config.js';
 
-export const renderer = new THREE.WebGLRenderer({ antialias: !IS_TOUCH, powerPreference: 'high-performance' });
+// 4x MSAA on a Retina-sized buffer costs more than the whole scene, and at 2x pixel
+// density the edges it smooths are already sub-pixel. Use it on low-density screens only.
+const antialias = !IS_TOUCH && devicePixelRatio < 2;
+
+export const renderer = new THREE.WebGLRenderer({ antialias, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, IS_TOUCH ? 1.5 : 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;

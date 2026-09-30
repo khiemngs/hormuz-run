@@ -36,10 +36,13 @@ src/
   main.js              entry point and frame loop
   config.js            tuning constants (track length, fog, sun)
   input.js             keyboard handling
-  core/engine.js       renderer, scene, camera, lights, resize
+  core/
+    engine.js          renderer, scene, camera, lights, resize
+    quality.js         dynamic resolution scaling
   world/
     geography.js       lane width, wave height, terrain height
     sky.js, water.js   shader sky dome and ocean
+    noise.js           noise texture baked at startup for both shaders
     coast.js           coastlines, buoys, finish gate
     index.js           builds the world and keeps it centred on the ship
   models/
@@ -82,3 +85,8 @@ src/
 - The water mesh is dense near the ship and coarse toward the horizon. Its shading is computed per pixel from the wave equations, so it stays smooth at any mesh density.
 - The coast is split into chunks that are culled when out of view, and the far plane sits just past full fog.
 - HUD text refreshes 10 times a second rather than every frame.
+- No MSAA on high-density screens, where it cost more than the whole scene. Low-density desktop screens keep it.
+- Water ripples and clouds sample a small noise texture baked at startup instead of computing noise per pixel.
+- Draw order avoids shading hidden pixels: solid models first, then water, then sky at the far plane.
+- The shadow map refreshes at most 60 times a second.
+- Dynamic resolution (`core/quality.js`) lowers the render scale if the frame rate drops below 50 fps and restores it when there is headroom.

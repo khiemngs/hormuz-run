@@ -4,7 +4,7 @@ import { TRACK, IRAN_OFF, IRAN_SEED, OMAN_OFF, OMAN_SEED } from '../config.js';
 import { laneHalf, landH, coastX, vnoise } from './geography.js';
 import { textSprite } from '../utils/canvas.js';
 
-const LAND_MAT = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 1 });
+const LAND_MAT = new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true });
 const LAND_WIDTH = 260;
 const CHUNKS = 12;
 const Z_START = 500, Z_END = -(TRACK + 900);

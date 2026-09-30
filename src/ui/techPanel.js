@@ -101,7 +101,7 @@ export function updateTech(dt, cpuMs) {
     row('Intensity', G.mode === 'play' ? intensity().toFixed(2) : '-') +
     row('Ship x / z', `${s.x.toFixed(0)} / ${s.z.toFixed(0)}`) +
     head('System') +
-    row('Resolution', `${buf.x}×${buf.y} @${renderer.getPixelRatio()}x`) +
+    row('Resolution', `${buf.x}×${buf.y} @${renderer.getPixelRatio().toFixed(2)}x`) +
     row('JS heap', heap) +
     row('Three.js', `r${THREE.REVISION}`) +
     `<div style="opacity:.7;margin-top:2px">${gpuName}</div>`;

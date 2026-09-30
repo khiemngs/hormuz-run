@@ -4,7 +4,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 export const mat = (color, opts = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.7, metalness: 0.1, ...opts });
 
 // Every vertex-coloured model shares this material, and so one shader program.
-export const MODEL_MAT = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.78, metalness: 0.08 });
+export const MODEL_MAT = new THREE.MeshLambertMaterial({ vertexColors: true });
 
 const c = new THREE.Color();
 

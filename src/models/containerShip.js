@@ -29,7 +29,7 @@ const corrugated = canvasTexture(64, 64, g => {
   g.lineWidth = 5;
   g.strokeRect(0, 0, 64, 64);
 });
-export const CONTAINER_MAT = new THREE.MeshStandardMaterial({ map: corrugated, roughness: 0.7, metalness: 0.15 });
+export const CONTAINER_MAT = new THREE.MeshLambertMaterial({ map: corrugated });
 
 function shipGeometry() {
   const hull = loftHull({
