@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { FOG_COLOR, FOG_NEAR, FOG_FAR } from '../config.js';
+import { FOG_COLOR, FOG_NEAR, FOG_FAR, IS_TOUCH } from '../config.js';
 
-export const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+export const renderer = new THREE.WebGLRenderer({ antialias: !IS_TOUCH, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(devicePixelRatio, IS_TOUCH ? 1.5 : 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.shadowMap.enabled = true;
@@ -18,7 +18,7 @@ scene.add(new THREE.HemisphereLight(0xffe2c4, 0x3a4a5a, 1.2));
 
 export const sun = new THREE.DirectionalLight(0xffd2a0, 2.6);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.mapSize.setScalar(IS_TOUCH ? 1024 : 2048);
 sun.shadow.radius = 3;
 sun.shadow.bias = -0.0005;
 Object.assign(sun.shadow.camera, { left: -70, right: 70, top: 70, bottom: -70, near: 10, far: 500 });

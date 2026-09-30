@@ -1,13 +1,28 @@
 import { $ } from '../utils/dom.js';
 import { loadBest } from '../utils/storage.js';
+import { IS_TOUCH } from '../config.js';
+
+const CONTROLS = IS_TOUCH ? `
+      <span>◀ ▶</span><span>Rudder. Turning takes a while.</span>
+      <span>▲ ▼</span><span>Throttle. She's heavy, so plan ahead.</span>
+      <span>🎆</span><span>Launch flares to decoy homing missiles</span>
+      <span>📯</span><span>Ship horn scares off IRGC fast boats</span>` : `
+      <kbd>W / S</kbd><span>Throttle. She's heavy, so plan ahead.</span>
+      <kbd>A / D</kbd><span>Rudder. Turning takes a while too.</span>
+      <kbd>Space</kbd><span>Launch flares to decoy homing missiles</span>
+      <kbd>H</kbd><span>Ship horn scares off IRGC fast boats</span>`;
 
 function show(html, onButton) {
   $('card').innerHTML = html;
   $('screen').style.display = 'flex';
+  document.body.classList.add('menu');
   $('go').onclick = onButton;
 }
 
-export const hideScreen = () => ($('screen').style.display = 'none');
+export function hideScreen() {
+  $('screen').style.display = 'none';
+  document.body.classList.remove('menu');
+}
 export const isScreenOpen = () => $('screen').style.display !== 'none';
 
 export function showMenu(onStart) {
@@ -18,11 +33,7 @@ export function showMenu(onStart) {
     <p>You captain the <b>MV Ever Dodging</b>, a very large, very slow container ship.
        The US Navy and Iran are fighting over the Strait of Hormuz, and you are right in the middle.
        Get your cargo to the Gulf of Oman.</p>
-    <div class="grid">
-      <kbd>W / S</kbd><span>Throttle. She's heavy, so plan ahead.</span>
-      <kbd>A / D</kbd><span>Rudder. Turning takes a while too.</span>
-      <kbd>Space</kbd><span>Launch flares to decoy homing missiles</span>
-      <kbd>H</kbd><span>Ship horn scares off IRGC fast boats</span>
+    <div class="grid">${CONTROLS}
       <span>🔴 Red circles</span><span>Incoming artillery. Don't be there when it lands.</span>
       <span>➤ Red lanes</span><span>A missile is about to cross the strait. Slow down or speed through.</span>
       <span>💥 Fast boats</span><span>Ram them with your 200,000 tons for bonus points</span>

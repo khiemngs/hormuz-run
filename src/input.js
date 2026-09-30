@@ -23,4 +23,23 @@ export function initInput(actions) {
   });
   addEventListener('keyup', e => { G.keys[normalize(e)] = false; });
   addEventListener('blur', () => { for (const k in G.keys) G.keys[k] = false; });
+
+  // Touch pad: hold buttons mirror held keys, the rest fire once per press.
+  for (const b of document.querySelectorAll('#touch [data-key]')) {
+    const hold = on => e => {
+      e.preventDefault();
+      G.keys[b.dataset.key] = on;
+      b.classList.toggle('on', on);
+    };
+    b.addEventListener('pointerdown', hold(true));
+    for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(ev, hold(false));
+  }
+  const tap = (id, fn) => document.getElementById(id).addEventListener('pointerdown', e => {
+    e.preventDefault();
+    if (G.mode === 'play') fn();
+  });
+  tap('tFlare', actions.flare);
+  tap('tHorn', actions.horn);
+  tap('pause', actions.pause);
+  addEventListener('contextmenu', e => e.preventDefault());
 }

@@ -4,6 +4,11 @@ import { camera } from '../core/engine.js';
 import { rand } from '../utils/math.js';
 import { updatePointScale } from '../fx/effects.js';
 
+const HALF_HFOV_PORTRAIT = THREE.MathUtils.degToRad(25);
+
+// On tall screens, widen the vertical FOV so the whole lane stays in view.
+const baseFov = () => Math.min(95, Math.max(60, THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(HALF_HFOV_PORTRAIT) / camera.aspect))));
+
 const desired = new THREE.Vector3();
 const lookAt = new THREE.Vector3();
 
@@ -28,7 +33,7 @@ export function updateCamera(dt) {
   camera.position.y += rand(-1, 1) * jolt;
   camera.lookAt(lookAt);
 
-  const fov = 60 + (s.turbo > 0 ? 12 : 0);
+  const fov = baseFov() + (s.turbo > 0 ? 12 : 0);
   if (Math.abs(camera.fov - fov) > 0.05) {
     camera.fov += (fov - camera.fov) * Math.min(1, dt * 3);
     camera.updateProjectionMatrix();

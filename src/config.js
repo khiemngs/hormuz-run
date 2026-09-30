@@ -16,3 +16,6 @@ export const FOG_FAR = 720;
 
 // Fog is mixed in after tone mapping, so it is defined in display space.
 export const FOG_COLOR = new THREE.Color().setRGB(0.86, 0.66, 0.5, THREE.LinearSRGBColorSpace);
+
+// Phones and tablets get touch controls, a vsynced loop and lighter rendering.
+export const IS_TOUCH = matchMedia('(pointer: coarse)').matches;

@@ -16,6 +16,8 @@ Steer a slow, heavy container ship through the Strait of Hormuz while the US Nav
 | `M` | Mute / unmute audio (also the 🔊 button) |
 | `` ` `` | Toggle tech panel |
 
+On phones and tablets the game shows on-screen buttons instead: ◀ ▶ rudder, ▲ ▼ throttle, 🎆 flares, 📯 horn, ⏸ pause. It plays in portrait or landscape.
+
 ## Development
 
 ```bash

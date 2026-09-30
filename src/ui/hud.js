@@ -54,6 +54,8 @@ function updateStats() {
   $('score').textContent = Math.floor(G.score + s.dist).toLocaleString();
   $('dist').textContent = `${Math.max(0, (TRACK + s.z) / 100).toFixed(1)} nm`;
   $('flares').textContent = s.flares;
+  $('tFlareN').textContent = s.flares;
+  $('tHorn').classList.toggle('cd', s.hornCd > 0);
   $('horn').textContent = s.hornCd > 0 ? `${s.hornCd.toFixed(1)}s` : 'READY';
   $('shipdot').style.left = `${progressAt(s.z) * 100}%`;
 

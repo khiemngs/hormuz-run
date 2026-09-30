@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <title>Hormuz Run</title>
   <meta name="description" content="Steer a container ship through the Strait of Hormuz while two navies fight around you." />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -29,14 +29,27 @@
       <div class="lbl" style="text-align:right">Score</div>
       <div class="big" id="score">0</div>
       <div class="row"><span class="lbl">To safety</span><b id="dist">40.0 nm</b></div>
-      <div class="row"><span class="lbl">Flares</span><b id="flares">3</b></div>
-      <div class="row"><span class="lbl">Horn</span><b id="horn">READY</b></div>
+      <div class="row kb"><span class="lbl">Flares</span><b id="flares">3</b></div>
+      <div class="row kb"><span class="lbl">Horn</span><b id="horn">READY</b></div>
     </div>
 
     <div id="tech" class="panel">
       <div class="lbl">Tech · <kbd>`</kbd> toggle</div>
       <canvas id="fpsGraph" width="200" height="34"></canvas>
       <div id="techBody"></div>
+    </div>
+
+    <div id="touch">
+      <div class="pad left">
+        <button type="button" data-key="a" aria-label="Rudder left">◀</button>
+        <button type="button" data-key="d" aria-label="Rudder right">▶</button>
+      </div>
+      <div class="pad right">
+        <button type="button" id="tFlare" aria-label="Flares">🎆<small id="tFlareN">3</small></button>
+        <button type="button" data-key="w" aria-label="Throttle up">▲</button>
+        <button type="button" id="tHorn" aria-label="Horn">📯</button>
+        <button type="button" data-key="s" aria-label="Throttle down">▼</button>
+      </div>
     </div>
 
     <div id="banner"></div>
@@ -50,6 +63,7 @@
 
   <div id="vignette"></div>
   <div id="screen"><div class="card" id="card"></div></div>
+  <button id="pause" type="button" aria-label="Pause">⏸</button>
   <button id="mute" type="button" title="Toggle audio (M)" aria-label="Toggle audio">🔊</button>
 
   <script type="module" src="/src/main.js"></script>

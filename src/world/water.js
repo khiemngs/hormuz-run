@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { scene } from '../core/engine.js';
-import { FOG_COLOR, FOG_NEAR, FOG_FAR, SUN_DIR } from '../config.js';
+import { FOG_COLOR, FOG_NEAR, FOG_FAR, SUN_DIR, IS_TOUCH } from '../config.js';
 
 // Waves are computed from world position, so the plane can follow the ship freely.
 export function createWater() {
@@ -49,7 +49,7 @@ export function createWater() {
         gl_FragColor.rgb = mix(gl_FragColor.rgb, uFog, smoothstep(uNear, uFar, length(cameraPosition - vW)));
       }`,
   });
-  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1300, 160, 210).rotateX(-Math.PI / 2), material);
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1300, ...(IS_TOUCH ? [100, 130] : [160, 210])).rotateX(-Math.PI / 2), material);
   mesh.frustumCulled = false;
   scene.add(mesh);
   return { mesh, material };

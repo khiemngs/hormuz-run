@@ -5,7 +5,7 @@ import { buildFastBoat } from '../../models/navy.js';
 import { BULLET_GEO, BULLET_MAT } from '../../models/ordnance.js';
 import { laneHalf, waveH } from '../../world/geography.js';
 import { rand, clamp } from '../../utils/math.js';
-import { explode, muzzle, fx, smoke } from '../../fx/effects.js';
+import { explode, muzzle, fx, smoke, emitCount } from '../../fx/effects.js';
 import { sfxGunfire } from '../../audio/sfx.js';
 import { hullDist, toWorld, damage, addScore } from '../ship.js';
 import { radio } from '../../ui/hud.js';
@@ -76,7 +76,7 @@ export function updateBoats(dt) {
     b.pos.z += -Math.cos(b.yaw) * b.speed * dt;
     b.mesh.position.set(b.pos.x, waveH(b.pos.x, b.pos.z, G.time) * 0.6 + 0.2, b.pos.z);
     b.mesh.rotation.set(-0.08, b.yaw, Math.sin(G.time * 3 + i) * 0.08);
-    if (Math.random() < 0.8) {
+    if (emitCount(0.8)) {
       smoke.spawn(b.pos.x + Math.sin(b.yaw) * 3, 0.7, b.pos.z + Math.cos(b.yaw) * 3, rand(-1, 1), 0, rand(-1, 1), 0.93, 0.97, 1, 1.4, 1.6, 2, 0, 1, 0.8);
     }
 

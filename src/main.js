@@ -14,6 +14,7 @@ import { reset, start } from './game/session.js';
 import { updateEffects, updatePointScale } from './fx/effects.js';
 import { setEngineLevel, isMuted, setMuted } from './audio/sfx.js';
 import { $ } from './utils/dom.js';
+import { IS_TOUCH } from './config.js';
 import { banner, updateHud } from './ui/hud.js';
 import { showMenu, isScreenOpen } from './ui/screens.js';
 import { updateTech, toggleTech } from './ui/techPanel.js';
@@ -25,6 +26,8 @@ function togglePause() {
   G.paused = !G.paused;
   banner(G.paused ? 'PAUSED' : '', '', G.paused ? Infinity : 0.01);
 }
+
+document.body.classList.toggle('touch', IS_TOUCH);
 
 const muteBtn = $('mute');
 const renderMute = () => {
@@ -69,10 +72,11 @@ function update(dt) {
 
 let last = performance.now();
 
-// Uncapped loop: MessageChannel fires as fast as the CPU/GPU allow, unlike
+// Desktop runs uncapped: MessageChannel fires as fast as the CPU/GPU allow, unlike
 // requestAnimationFrame, which is locked to the display refresh rate.
+// Touch devices stay on requestAnimationFrame to save battery and heat.
 const channel = new MessageChannel();
-const schedule = () => {
+const schedule = IS_TOUCH ? () => requestAnimationFrame(frame) : () => {
   if (document.hidden) setTimeout(schedule, 250); // idle while the tab is hidden
   else channel.port2.postMessage(0);
 };

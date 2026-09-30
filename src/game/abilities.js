@@ -3,7 +3,7 @@ import { G } from './state.js';
 import { dyn } from '../core/engine.js';
 import { createShockwave } from '../models/ordnance.js';
 import { rand, pick } from '../utils/math.js';
-import { fx, smoke } from '../fx/effects.js';
+import { fx, smoke, emitCount } from '../fx/effects.js';
 import { sfxFlare, sfxHorn } from '../audio/sfx.js';
 import { toWorld, shipCenter, addScore } from './ship.js';
 import { banner } from '../ui/hud.js';
@@ -45,8 +45,10 @@ export function updateFlares(dt) {
     f.vel.y -= 5 * dt;
     f.vel.multiplyScalar(1 - dt * 0.6);
     f.pos.addScaledVector(f.vel, dt);
-    fx.spawn(f.pos.x, f.pos.y, f.pos.z, rand(-1, 1), rand(-1, 1), rand(-1, 1), 1, 0.85, 0.5, rand(2, 3.5), 0.3, -3);
-    smoke.spawn(f.pos.x, f.pos.y, f.pos.z, 0, 0.5, 0, 0.85, 0.85, 0.85, 1.2, 1.4, 2, 0, 0.5, 0.4);
+    if (emitCount()) {
+      fx.spawn(f.pos.x, f.pos.y, f.pos.z, rand(-1, 1), rand(-1, 1), rand(-1, 1), 1, 0.85, 0.5, rand(2, 3.5), 0.3, -3);
+      smoke.spawn(f.pos.x, f.pos.y, f.pos.z, 0, 0.5, 0, 0.85, 0.85, 0.85, 1.2, 1.4, 2, 0, 0.5, 0.4);
+    }
     if (f.life <= 0) {
       // Missiles keep flying to where the flare burned out.
       for (const h of G.homings) if (h.target === f) h.target = { pos: f.pos.clone() };

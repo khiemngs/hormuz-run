@@ -5,7 +5,7 @@ import { TRACK, IRAN_OFF, IRAN_SEED } from '../config.js';
 import { buildDestroyer, buildBattery } from '../models/navy.js';
 import { laneHalf, landH, waveH, coastX } from '../world/geography.js';
 import { rand, clamp, pick } from '../utils/math.js';
-import { smoke } from '../fx/effects.js';
+import { smoke, emitCount } from '../fx/effects.js';
 
 // US destroyers sail beyond the starboard buoy line, pacing the player at fixed leads.
 export const destroyers = [[-30, 4], [90, -2], [210, 6], [330, 0]].map(([offset, xoff]) => {
@@ -47,6 +47,6 @@ export function updateNavy(dt) {
     const x = laneHalf(d.z) + 30 + d.xoff;
     d.group.position.set(x, waveH(x, d.z, G.time) * 0.3, d.z);
     d.group.rotation.z = Math.sin(G.time * 0.8 + i) * 0.02;
-    if (Math.random() < 0.3) smoke.spawn(x, 0.7, d.z + 14, rand(-1, 1), 0, 2, 0.93, 0.97, 1, 2, 2.5, 2, 0, 1, 0.7);
+    if (emitCount(0.3)) smoke.spawn(x, 0.7, d.z + 14, rand(-1, 1), 0, 2, 0.93, 0.97, 1, 2, 2.5, 2, 0, 1, 0.7);
   });
 }

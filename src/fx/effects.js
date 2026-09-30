@@ -16,7 +16,16 @@ export function updatePointScale() {
   smoke.mat.uniforms.uScale.value = s;
 }
 
+// Continuous emitters (wake, trails, smoke) are tuned as particles per frame at 60 fps.
+// emitCount converts that to this frame's share, so output tracks time, not frame rate.
+let frameScale = 1;
+export function emitCount(perFrameAt60 = 1) {
+  const x = perFrameAt60 * frameScale;
+  return Math.floor(x) + (Math.random() < x % 1 ? 1 : 0);
+}
+
 export function updateEffects(dt) {
+  frameScale = dt * 60;
   fx.update(dt);
   smoke.update(dt);
   boomLight.intensity *= Math.exp(-7 * dt);
@@ -62,8 +71,10 @@ export function muzzle(p, dirx = 0) {
 }
 
 export function trail(p, big = 1) {
-  fx.spawn(p.x, p.y, p.z, rand(-1, 1), rand(-1, 1), rand(-1, 1), 1, 0.6, 0.2, 1.4 * big, 0.15, 2);
-  smoke.spawn(p.x, p.y, p.z, rand(-0.5, 0.5), rand(0, 1), rand(-0.5, 0.5), 0.8, 0.78, 0.75, 1.3 * big, 1.6, 2.5, -0.5, 0.4, 0.55);
+  for (let n = emitCount(); n > 0; n--) {
+    fx.spawn(p.x, p.y, p.z, rand(-1, 1), rand(-1, 1), rand(-1, 1), 1, 0.6, 0.2, 1.4 * big, 0.15, 2);
+    smoke.spawn(p.x, p.y, p.z, rand(-0.5, 0.5), rand(0, 1), rand(-0.5, 0.5), 0.8, 0.78, 0.75, 1.3 * big, 1.6, 2.5, -0.5, 0.4, 0.55);
+  }
 }
 
 // Firework burst for the victory screen.

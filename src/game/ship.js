@@ -5,7 +5,7 @@ import { TRACK } from '../config.js';
 import { createContainerShip, fillCargo } from '../models/containerShip.js';
 import { laneHalf, waveH } from '../world/geography.js';
 import { rand, clamp } from '../utils/math.js';
-import { fx, smoke } from '../fx/effects.js';
+import { fx, smoke, emitCount } from '../fx/effects.js';
 import { banner, radio, popup, flashVignette } from '../ui/hud.js';
 import { fireShell } from './threats/artillery.js';
 import { endRun, win } from './session.js';
@@ -149,14 +149,14 @@ function poseModel() {
 
 function emitWake() {
   const s = G.ship, c = Math.cos(s.yaw), sn = Math.sin(s.yaw);
-  const n = Math.round(s.speed / 7) + (s.turbo > 0 ? 3 : 0);
+  const n = emitCount(s.speed / 7 + (s.turbo > 0 ? 3 : 0));
   for (let i = 0; i < n; i++) {
     const side = Math.random() < 0.5 ? -1 : 1, out = side * rand(2, 5);
     const stern = toWorld(side * rand(1, 4), 21), bow = toWorld(side * rand(1.5, 3), -20);
     smoke.spawn(stern.x, 0.8, stern.z, out * c, 0, -out * sn, 0.92, 0.96, 1, rand(1.2, 2.2), rand(2.5, 4), 1.6, 0, 1.2, 0.35);
     if (Math.random() < 0.5) smoke.spawn(bow.x, 1, bow.z, out * c * 1.5, rand(1, 4), -out * sn * 1.5, 0.95, 0.98, 1, rand(0.8, 1.6), 1.2, 1.2, 6, 1, 0.5);
   }
-  if (s.turbo > 0) {
+  if (s.turbo > 0 && emitCount()) {
     const st = toWorld(rand(-3, 3), 22);
     fx.spawn(st.x, 1.5, st.z, 0, 1, 0, 1, 0.3, 0.9, 3, 0.4, 3);
   }
@@ -165,7 +165,7 @@ function emitWake() {
 // Smoke, then fire, as the hull takes damage.
 function emitDamage() {
   const s = G.ship;
-  if (s.hp >= 70 || Math.random() > (70 - s.hp) / 40) return;
+  if (s.hp >= 70 || !emitCount(Math.min(1, (70 - s.hp) / 40))) return;
   const p = toWorld(rand(-3.5, 3.5), rand(-15, 15)), g = rand(0.1, 0.2);
   smoke.spawn(p.x, 8, p.z, rand(-1, 1), rand(4, 7), rand(-1, 1), g, g, g, 3, 3, 3, -0.5, 0.2, 0.8);
   if (s.hp < 40) fx.spawn(p.x, 7, p.z, 0, rand(2, 5), 0, 1, 0.45, 0.1, rand(2, 3.5), 0.5, 1);

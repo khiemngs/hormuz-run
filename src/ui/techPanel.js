@@ -4,6 +4,7 @@ import { renderer, scene } from '../core/engine.js';
 import { fx, smoke } from '../fx/effects.js';
 import { intensity } from '../game/director.js';
 import { $ } from '../utils/dom.js';
+import { IS_TOUCH } from '../config.js';
 
 const REFRESH = 0.25;    // panel text, seconds
 const SCENE_WALK = 0.5;  // vertex count, seconds
@@ -25,6 +26,9 @@ export function toggleTech() {
   t.shown = !t.shown;
   $('tech').style.display = t.shown ? '' : 'none';
 }
+
+// Starts hidden on touch devices, where it would cover the play area.
+if (IS_TOUCH) toggleTech();
 
 // Scene walk is costly, so it runs a few times per second rather than every frame.
 function countScene() {

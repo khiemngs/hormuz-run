@@ -49,7 +49,7 @@ export function updateShells(dt) {
     s.mesh.position.y += s.arc * 4 * k * (1 - k);
     s.marker.fill.scale.setScalar(Math.max(0.01, k));
     s.marker.group.position.y = 2 + waveH(s.to.x, s.to.z, G.time) * 0.3;
-    if (Math.random() < 0.7) trail(s.mesh.position, 0.8);
+    trail(s.mesh.position, 0.8);
     if (k < 1) continue;
 
     explode(s.to, 1);
