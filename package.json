@@ -1,0 +1,18 @@
+{
+  "name": "hormuz-run",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Steer a container ship through the Strait of Hormuz crossfire. Three.js browser game.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "vite": "^8.3.1"
+  }
+}
