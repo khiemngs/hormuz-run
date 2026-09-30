@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { G } from './state.js';
-import { scene, dyn } from '../core/engine.js';
+import { scene } from '../core/engine.js';
 import { TRACK } from '../config.js';
-import { createContainerShip, fillCargo } from '../models/containerShip.js';
+import { createContainerShip } from '../models/containerShip.js';
+import { resetCargo, loseContainers, updateCargo } from './cargo.js';
 import { laneHalf, waveH } from '../world/geography.js';
 import { rand, clamp } from '../utils/math.js';
 import { fx, smoke, emitCount } from '../fx/effects.js';
@@ -23,7 +24,7 @@ export function resetShip() {
     x: 0, z: 40, yaw: 0, speed: 12, target: 12, rudder: 0, roll: 0, hp: 100, dist: 0,
     flares: 3, flareCd: 0, hornCd: 0, shield: 0, turbo: 0, groundCd: 0, zoneCd: 0, closeCd: 0,
   });
-  G.cargo = fillCargo(model.cargoGroup);
+  resetCargo();
   model.group.position.set(0, 0, G.ship.z);
   model.group.rotation.set(0, 0, 0);
 }
@@ -68,19 +69,6 @@ export function damage(amount, label) {
     G.sinkT = 0;
     banner('ABANDON SHIP', 'The strait claims another one', 4, '#ff4b3a');
     radio('Captain', 'Everybody off! Grab the cook!');
-  }
-}
-
-// Knocks containers off the top of the stack; they tumble into the sea as debris.
-function loseContainers(n) {
-  for (let i = 0; i < n && G.cargo.length; i++) {
-    const c = G.cargo.pop();
-    dyn.attach(c);
-    G.debris.push({
-      mesh: c, t: 0, floating: false,
-      vel: new THREE.Vector3(rand(-9, 9), rand(6, 13), rand(-5, 5)),
-      spin: new THREE.Vector3(rand(-2, 2), rand(-2, 2), rand(-2, 2)),
-    });
   }
 }
 
@@ -147,14 +135,15 @@ function poseModel() {
   if (model.shield.visible) model.shield.material.opacity = 0.14 + Math.sin(G.time * 10) * 0.06 * (s.shield < 1.5 ? 2 : 1);
 }
 
+// Spray at the bow and churn at the stern. The flat foam wake is drawn by the water shader.
 function emitWake() {
   const s = G.ship, c = Math.cos(s.yaw), sn = Math.sin(s.yaw);
-  const n = emitCount(s.speed / 7 + (s.turbo > 0 ? 3 : 0));
+  const n = emitCount(s.speed / 12 + (s.turbo > 0 ? 3 : 0));
   for (let i = 0; i < n; i++) {
     const side = Math.random() < 0.5 ? -1 : 1, out = side * rand(2, 5);
-    const stern = toWorld(side * rand(1, 4), 21), bow = toWorld(side * rand(1.5, 3), -20);
-    smoke.spawn(stern.x, 0.8, stern.z, out * c, 0, -out * sn, 0.92, 0.96, 1, rand(1.2, 2.2), rand(2.5, 4), 1.6, 0, 1.2, 0.35);
-    if (Math.random() < 0.5) smoke.spawn(bow.x, 1, bow.z, out * c * 1.5, rand(1, 4), -out * sn * 1.5, 0.95, 0.98, 1, rand(0.8, 1.6), 1.2, 1.2, 6, 1, 0.5);
+    const stern = toWorld(side * rand(0.5, 3), 21), bow = toWorld(side * rand(1, 2.5), -21);
+    smoke.spawn(stern.x, 0.8, stern.z, out * c * 0.5, rand(0.5, 2), -out * sn * 0.5, 0.92, 0.96, 1, rand(1, 1.8), rand(1, 1.8), 1.4, 3, 1.2, 0.4);
+    smoke.spawn(bow.x, 1, bow.z, out * c * 1.5, rand(1, 4), -out * sn * 1.5, 0.95, 0.98, 1, rand(0.8, 1.6), 1.2, 1.2, 6, 1, 0.5);
   }
   if (s.turbo > 0 && emitCount()) {
     const st = toWorld(rand(-3, 3), 22);
@@ -181,6 +170,8 @@ export function updateShip(dt) {
   if (G.mode === 'sinking') G.sinkT += dt;
 
   poseModel();
+  model.group.updateMatrixWorld();
+  updateCargo(dt, model.group.matrixWorld);
   emitWake();
   emitDamage();
 

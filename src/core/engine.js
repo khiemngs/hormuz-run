@@ -12,7 +12,7 @@ document.body.prepend(renderer.domElement);
 export const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(FOG_COLOR, FOG_NEAR, FOG_FAR);
 
-export const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.5, 1500);
+export const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.5, FOG_FAR + 40); // fog hides the far plane
 
 scene.add(new THREE.HemisphereLight(0xffe2c4, 0x3a4a5a, 1.2));
 

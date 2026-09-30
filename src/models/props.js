@@ -1,28 +1,23 @@
 import * as THREE from 'three';
-import { mat } from './materials.js';
+import { mat, paint, merged } from './build.js';
 import { emojiTexture } from '../utils/canvas.js';
 
-const MINE_GEO = new THREE.SphereGeometry(1.3, 14, 10);
-const SPIKE_GEO = new THREE.CylinderGeometry(0.1, 0.1, 3.8, 6);
-const MINE_MAT = mat(0x2b2b2b, { metalness: 0.6, roughness: 0.4 });
-const MINE_LIGHT = new THREE.MeshBasicMaterial({ color: 0xff2200 });
-
-// All mine lights share one material, so one call blinks every mine.
-export const setMineBlink = on => MINE_LIGHT.color.setHex(on ? 0xff2200 : 0x330000);
-
-export function buildMine() {
-  const g = new THREE.Group();
-  g.add(new THREE.Mesh(MINE_GEO, MINE_MAT));
-  for (const r of [[0, 0, 0], [Math.PI / 2, 0, 0], [0, 0, Math.PI / 2]]) {
-    const spike = new THREE.Mesh(SPIKE_GEO, MINE_MAT);
-    spike.rotation.set(...r);
-    g.add(spike);
-  }
-  const light = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 6), MINE_LIGHT);
-  light.position.y = 1.5;
-  g.add(light);
-  return g;
+// Contact mine: faceted body with horns. Drawn instanced.
+export function mineGeometry() {
+  const HORN = new THREE.Vector3(0, 1, 0), q = new THREE.Quaternion();
+  const dirs = [[0, 1, 0], [1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0.7, 0.7, 0.7], [-0.7, 0.7, 0.7], [0.7, 0.7, -0.7], [-0.7, 0.7, -0.7]];
+  const horns = dirs.map(d => {
+    const dir = new THREE.Vector3(...d).normalize();
+    return paint(new THREE.ConeGeometry(0.17, 0.75, 5).applyQuaternion(q.setFromUnitVectors(HORN, dir)), 0x4a4f4c)
+      .translate(dir.x * 1.5, dir.y * 1.5, dir.z * 1.5);
+  });
+  return merged([paint(new THREE.IcosahedronGeometry(1.3, 1), 0x2a2d2c), ...horns]);
 }
+
+// Blinking light on the top horn; a separate instanced mesh so one colour change blinks them all.
+export const MINE_LIGHT_GEO = new THREE.SphereGeometry(0.32, 6, 4).translate(0, 2, 0);
+export const MINE_LIGHT_MAT = new THREE.MeshBasicMaterial({ color: 0xff2200 });
+export const setMineBlink = on => MINE_LIGHT_MAT.color.setHex(on ? 0xff2200 : 0x330000);
 
 export const PICKUPS = {
   repair: { color: 0x2ecc71, emoji: '🔧', label: 'HULL REPAIR +30', css: '#4be37a' },

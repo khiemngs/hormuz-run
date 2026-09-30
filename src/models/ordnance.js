@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { mat } from './materials.js';
+import { MODEL_MAT, paint, pbox, merged } from './build.js';
 import { canvasTexture } from '../utils/canvas.js';
 
 export const SHELL_GEO = new THREE.SphereGeometry(0.55, 8, 6);
@@ -7,16 +7,19 @@ export const SHELL_MAT = new THREE.MeshBasicMaterial({ color: 0xffb040 });
 export const BULLET_GEO = new THREE.BoxGeometry(0.15, 0.15, 1.8);
 export const BULLET_MAT = new THREE.MeshBasicMaterial({ color: 0xffee66 });
 
+let missileGeo = null;
+
 // Missile body runs along +z, so Object3D.lookAt points the nose at the target.
 export function buildMissile() {
-  const g = new THREE.Group();
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 3.2, 8).rotateX(Math.PI / 2), mat(0xdddddd));
-  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.9, 8).rotateX(Math.PI / 2), mat(0xaa2222));
-  nose.position.z = 2.05;
-  const glow = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffaa44 }));
-  glow.position.z = -1.8;
-  g.add(body, nose, glow);
-  return g;
+  missileGeo ??= merged([
+    paint(new THREE.CylinderGeometry(0.3, 0.3, 3.2, 8).rotateX(Math.PI / 2), 0xdddddd),
+    paint(new THREE.ConeGeometry(0.3, 0.9, 8).rotateX(Math.PI / 2), 0xaa2222).translate(0, 0, 2.05),
+    pbox(1.4, 0.06, 0.7, 0x8a8f96, 0, 0, -1.25),
+    pbox(0.06, 1.4, 0.7, 0x8a8f96, 0, 0, -1.25),
+    pbox(0.9, 0.05, 0.5, 0x8a8f96, 0, 0, 0.5),
+    pbox(0.05, 0.9, 0.5, 0x8a8f96, 0, 0, 0.5),
+  ]);
+  return new THREE.Mesh(missileGeo, MODEL_MAT);
 }
 
 const RING_GEO = new THREE.RingGeometry(5.2, 6, 40).rotateX(-Math.PI / 2);

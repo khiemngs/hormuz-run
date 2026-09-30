@@ -7,7 +7,6 @@ import { updateNavy } from './game/navy.js';
 import { updateThreats } from './game/threats/index.js';
 import { updateMines, updatePickups } from './game/hazards.js';
 import { deployFlares, updateFlares, horn, updateShockwaves } from './game/abilities.js';
-import { updateDebris } from './game/debris.js';
 import { updateDirector } from './game/director.js';
 import { updateCamera } from './game/camera.js';
 import { reset, start } from './game/session.js';
@@ -61,9 +60,8 @@ function update(dt) {
   updateMines(dt);
   updatePickups();
   updateNavy(dt);
-  updateDebris(dt);
   updateShockwaves(dt);
-  updateEffects(dt);
+  updateEffects(dt, G.time);
   updateCamera(dt);
   updateWorld(G.time, G.ship);
   updateHud(dt);

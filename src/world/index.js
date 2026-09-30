@@ -8,11 +8,18 @@ const sky = createSky();
 const water = createWater();
 buildCoasts();
 
-// Keeps sky, water and the shadow-casting sun centred on the player.
-export function updateWorld(time, focus) {
-  water.material.uniforms.uTime.value = time;
-  sky.position.copy(camera.position);
-  water.mesh.position.set(Math.round(focus.x / 10) * 10, 0, Math.round(focus.z / 10) * 10 - 300);
-  sun.position.set(focus.x + SUN_DIR.x * 220, SUN_DIR.y * 220, focus.z + SUN_DIR.z * 220 - 20);
-  sun.target.position.set(focus.x, 0, focus.z - 20);
+// Keeps sky, water and the shadow-casting sun centred on the player, and feeds
+// the water shader the ship's pose for its wake.
+export function updateWorld(time, ship) {
+  sky.material.uniforms.uTime.value = time;
+  sky.mesh.position.copy(camera.position);
+
+  const u = water.material.uniforms;
+  u.uTime.value = time;
+  u.uShip.value.set(ship.x, ship.z, Math.cos(ship.yaw), Math.sin(ship.yaw));
+  u.uSpeed.value = ship.speed;
+  water.mesh.position.set(ship.x, 0, ship.z);
+
+  sun.position.set(ship.x + SUN_DIR.x * 220, SUN_DIR.y * 220, ship.z + SUN_DIR.z * 220 - 20);
+  sun.target.position.set(ship.x, 0, ship.z - 20);
 }

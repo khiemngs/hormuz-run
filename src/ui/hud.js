@@ -8,11 +8,12 @@ import { sfxRadio } from '../audio/sfx.js';
 
 const RADIO_TIME = 3.8;
 const POPUP_TIME = 1.5;
+const STATS_INTERVAL = 0.1; // seconds between text refreshes
 
 const hud = $('hud');
 const radioQueue = [];
 let pops = [];
-let bannerT = 0, radioT = 0, vignetteTimer = 0;
+let bannerT = 0, radioT = 0, statsT = 0, vignetteTimer = 0;
 
 export function banner(title, sub = '', dur = 2.2, color = '#fff') {
   $('banner').innerHTML = `<span style="color:${color}">${title}</span>${sub ? `<small>${sub}</small>` : ''}`;
@@ -44,6 +45,7 @@ export function clearHud() {
   for (const p of pops) p.el.remove();
   pops = [];
   radioQueue.length = 0;
+  statsT = 0;
 }
 
 function updateStats() {
@@ -66,7 +68,7 @@ function updateStats() {
   if (G.dir.evt === 'escalation') tags.push('<span style="color:#ff4b3a">ESCALATION</span>');
   $('status').innerHTML = tags.join(' · ');
 
-  $('lock').style.display = G.lockedOn && Math.sin(G.time * 14) > -0.3 ? 'block' : 'none';
+  $('lock').classList.toggle('on', G.lockedOn);
 }
 
 function updateMessages(dt) {
@@ -93,8 +95,7 @@ function updatePopups(dt) {
     v.copy(p.pos);
     v.y += p.t * 8;
     v.project(camera);
-    p.el.style.left = `${(v.x * 0.5 + 0.5) * innerWidth}px`;
-    p.el.style.top = `${(-v.y * 0.5 + 0.5) * innerHeight}px`;
+    p.el.style.transform = `translate(${(v.x * 0.5 + 0.5) * innerWidth}px, ${(-v.y * 0.5 + 0.5) * innerHeight}px) translate(-50%, -50%)`;
     p.el.style.opacity = 1 - p.t / POPUP_TIME;
     if (p.t > POPUP_TIME || v.z > 1) {
       p.el.remove();
@@ -104,7 +105,10 @@ function updatePopups(dt) {
 }
 
 export function updateHud(dt) {
-  updateStats();
+  if ((statsT -= dt) <= 0) {
+    statsT = STATS_INTERVAL;
+    updateStats();
+  }
   updateMessages(dt);
   updatePopups(dt);
 }

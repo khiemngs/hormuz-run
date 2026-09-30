@@ -1,32 +1,52 @@
 import * as THREE from 'three';
 import { scene } from '../core/engine.js';
-import { TRACK, IRAN_OFF, IRAN_SEED } from '../config.js';
-import { laneHalf, landH, coastX } from './geography.js';
+import { TRACK, IRAN_OFF, IRAN_SEED, OMAN_OFF, OMAN_SEED } from '../config.js';
+import { laneHalf, landH, coastX, vnoise } from './geography.js';
 import { textSprite } from '../utils/canvas.js';
 
-// Builds a coastline on the +x side. Mirroring via scale.x = -1 places it to port.
-function buildLand(offset, seed, mirror) {
-  const L = TRACK + 1400, W = 260;
-  const geo = new THREE.PlaneGeometry(1, 1, 36, 280).rotateX(-Math.PI / 2);
-  const p = geo.attributes.position, col = new Float32Array(p.count * 3), c = new THREE.Color();
+const LAND_MAT = new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 1 });
+const LAND_WIDTH = 260;
+const CHUNKS = 12;
+const Z_START = 500, Z_END = -(TRACK + 900);
 
-  for (let i = 0; i < p.count; i++) {
-    const u = p.getX(i) + 0.5, v = p.getZ(i) + 0.5;
-    const z = -(TRACK + 900) + v * L;
-    const out = u * u * W;
-    const h = landH(out, z, seed);
-    p.setXYZ(i, coastX(z, offset, out), h, z);
-    c.setHex(h < 0.6 ? 0xdcc294 : h < 7 ? 0xc49a6c : h < 18 ? 0x9a7552 : 0xb49a80);
-    c.offsetHSL(0, 0, (Math.random() - 0.5) * 0.04);
-    col.set([c.r, c.g, c.b], i * 3);
+// Sand on the beach, banded rock strata on the slopes, pale stone on the peaks.
+function landColor(c, h, out, z) {
+  const n = vnoise(out * 0.15, z * 0.15);
+  if (h < 1.1) c.setHex(0xe3cc9c);
+  else if (h < 5) c.setHex(0xcba877);
+  else if (h > 32) c.setHex(0xc2ab8e);
+  else {
+    const band = Math.sin(h * 0.9 + n * 3);
+    c.setHex(band > 0.3 ? 0xa9825a : band > -0.4 ? 0x94704c : 0x7f5f42);
   }
+  c.offsetHSL(0, 0, (n - 0.5) * 0.07);
+}
 
-  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-  geo.computeVertexNormals();
-  const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 1 }));
-  mesh.receiveShadow = true;
-  if (mirror) mesh.scale.x = -1;
-  scene.add(mesh);
+// Builds a coastline on the +x side, split into chunks along z so the renderer
+// can cull the ones outside the view. Mirroring (scale.x = -1) puts it to port.
+function buildLand(offset, seed, mirror) {
+  const c = new THREE.Color(), len = (Z_END - Z_START) / CHUNKS;
+  for (let k = 0; k < CHUNKS; k++) {
+    const z0 = Z_START + k * len;
+    const geo = new THREE.PlaneGeometry(1, 1, 36, 24).rotateX(-Math.PI / 2);
+    const p = geo.attributes.position, col = new Float32Array(p.count * 3);
+
+    for (let i = 0; i < p.count; i++) {
+      // Plane z runs -0.5..0.5; chunk z runs z0 + len (far) to z0 (near), keeping faces up.
+      const u = p.getX(i) + 0.5, z = z0 + len * (0.5 - p.getZ(i));
+      const out = u * u * LAND_WIDTH, h = landH(out, z, seed);
+      p.setXYZ(i, coastX(z, offset, out), h, z);
+      landColor(c, h, out, z);
+      col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
+    }
+
+    geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    geo.computeBoundingSphere();
+    const mesh = new THREE.Mesh(geo, LAND_MAT);
+    mesh.receiveShadow = true;
+    if (mirror) mesh.scale.x = -1;
+    scene.add(mesh);
+  }
 }
 
 function buildBuoys() {
@@ -43,6 +63,7 @@ function buildBuoys() {
     buoys.setMatrixAt(i * 2, m.makeTranslation(hw + 1, 0.6, z));
     buoys.setMatrixAt(i * 2 + 1, m.makeTranslation(-(hw + 1), 0.6, z));
   });
+  buoys.frustumCulled = false;
   scene.add(buoys);
 }
 
@@ -62,8 +83,8 @@ function buildFinishGate() {
 }
 
 export function buildCoasts() {
-  buildLand(IRAN_OFF, IRAN_SEED, true); // Iranian coast, port side
-  buildLand(78, 50, false);             // Omani coast, far starboard
+  buildLand(IRAN_OFF, IRAN_SEED, true);  // Iranian coast, port side
+  buildLand(OMAN_OFF, OMAN_SEED, false); // Omani coast, far starboard
   buildBuoys();
   buildFinishGate();
 }

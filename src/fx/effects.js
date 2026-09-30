@@ -24,10 +24,10 @@ export function emitCount(perFrameAt60 = 1) {
   return Math.floor(x) + (Math.random() < x % 1 ? 1 : 0);
 }
 
-export function updateEffects(dt) {
+export function updateEffects(dt, time) {
   frameScale = dt * 60;
-  fx.update(dt);
-  smoke.update(dt);
+  fx.update(time);
+  smoke.update(time);
   boomLight.intensity *= Math.exp(-7 * dt);
 }
 

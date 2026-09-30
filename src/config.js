@@ -9,6 +9,14 @@ export const CARGO_MAX = 45;
 export const IRAN_OFF = 10;
 export const IRAN_SEED = 0;
 
+// Omani coast sits much farther out, beyond the US fleet.
+export const OMAN_OFF = 78;
+export const OMAN_SEED = 50;
+
+// Sky gradient, shared by the sky dome and the water's reflection of it.
+export const SKY_TOP = new THREE.Color(0x35588c);
+export const SKY_LOW = new THREE.Color(0xe0a070);
+
 export const SUN_DIR = new THREE.Vector3(-0.45, 0.3, -0.84).normalize();
 
 export const FOG_NEAR = 140;
