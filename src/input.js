@@ -12,6 +12,7 @@ export function initInput(actions) {
     if (e.repeat) return;
 
     if (k === '`') actions.toggleTech();
+    if (k === 'm') actions.toggleMute();
     if (G.mode === 'play') {
       if (k === ' ') actions.flare();
       if (k === 'h') actions.horn();

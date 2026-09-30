@@ -40,3 +40,4 @@ h1 { font-family: 'Black Ops One', sans-serif; font-size: clamp(38px, 8vw, 76px)
 button { font: 700 20px Rajdhani, sans-serif; letter-spacing: .14em; padding: 12px 36px; border: 0; border-radius: 8px; background: var(--amber); color: #1a1208; cursor: pointer; margin-top: 14px; }
 button:hover { filter: brightness(1.1); }
 @media (max-width: 760px) { #prog, #help { display: none; } }
+#mute { position: fixed; top: 172px; right: 14px; z-index: 10; margin: 0; padding: 6px 12px; font-size: 20px; line-height: 1; background: var(--panel); border: 1px solid rgba(255,255,255,.12); color: var(--hud); backdrop-filter: blur(4px); }

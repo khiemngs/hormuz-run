@@ -12,7 +12,8 @@ import { updateDirector } from './game/director.js';
 import { updateCamera } from './game/camera.js';
 import { reset, start } from './game/session.js';
 import { updateEffects, updatePointScale } from './fx/effects.js';
-import { setEngineLevel } from './audio/sfx.js';
+import { setEngineLevel, isMuted, setMuted } from './audio/sfx.js';
+import { $ } from './utils/dom.js';
 import { banner, updateHud } from './ui/hud.js';
 import { showMenu, isScreenOpen } from './ui/screens.js';
 import { updateTech, toggleTech } from './ui/techPanel.js';
@@ -25,7 +26,20 @@ function togglePause() {
   banner(G.paused ? 'PAUSED' : '', '', G.paused ? Infinity : 0.01);
 }
 
-initInput({ flare: deployFlares, horn, pause: togglePause, toggleTech, start, canStart: isScreenOpen });
+const muteBtn = $('mute');
+const renderMute = () => {
+  muteBtn.textContent = isMuted() ? '🔇' : '🔊';
+  muteBtn.setAttribute('aria-pressed', isMuted());
+};
+function toggleMute() {
+  setMuted(!isMuted());
+  renderMute();
+}
+// Blur so Space (flares) doesn't re-trigger the button.
+muteBtn.onclick = () => { toggleMute(); muteBtn.blur(); };
+renderMute();
+
+initInput({ flare: deployFlares, horn, pause: togglePause, toggleTech, toggleMute, start, canStart: isScreenOpen });
 onResize(updatePointScale);
 updatePointScale();
 
@@ -55,8 +69,17 @@ function update(dt) {
 
 let last = performance.now();
 
+// Uncapped loop: MessageChannel fires as fast as the CPU/GPU allow, unlike
+// requestAnimationFrame, which is locked to the display refresh rate.
+const channel = new MessageChannel();
+const schedule = () => {
+  if (document.hidden) setTimeout(schedule, 250); // idle while the tab is hidden
+  else channel.port2.postMessage(0);
+};
+channel.port1.onmessage = () => frame(performance.now());
+
 function frame(now) {
-  requestAnimationFrame(frame);
+  schedule();
   const t0 = performance.now();
   const realDt = (now - last) / 1000;
   last = now;
@@ -65,4 +88,4 @@ function frame(now) {
   updateTech(realDt, performance.now() - t0);
 }
 
-requestAnimationFrame(frame);
+schedule();

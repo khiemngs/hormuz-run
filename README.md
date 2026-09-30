@@ -13,6 +13,7 @@ Steer a slow, heavy container ship through the Strait of Hormuz while the US Nav
 | `Space` | Flares (decoy homing missiles) |
 | `H` | Horn (scares off fast boats) |
 | `P` / `Esc` | Pause |
+| `M` | Mute / unmute audio (also the 🔊 button) |
 | `` ` `` | Toggle tech panel |
 
 ## Development

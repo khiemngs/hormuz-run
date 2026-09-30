@@ -1,14 +1,25 @@
 import { G } from '../game/state.js';
 import { clamp } from '../utils/math.js';
+import { loadMuted, saveMuted } from '../utils/storage.js';
 
 // All sound is synthesized with WebAudio, so the game ships no audio files.
+const VOLUME = 0.5;
 let ctx = null, master, noiseBuf, engineGain;
+let muted = loadMuted();
+
+export const isMuted = () => muted;
+
+export function setMuted(on) {
+  muted = on;
+  saveMuted(on);
+  if (master) master.gain.value = on ? 0 : VOLUME;
+}
 
 export function initAudio() {
   if (ctx) { ctx.resume(); return; }
   ctx = new (window.AudioContext || window.webkitAudioContext)();
   master = ctx.createGain();
-  master.gain.value = 0.5;
+  master.gain.value = muted ? 0 : VOLUME;
   master.connect(ctx.destination);
 
   noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);

@@ -8,3 +8,11 @@ export function loadBest() {
 export function saveBest(score) {
   try { if (score > loadBest()) localStorage.setItem(KEY, score); } catch { /* ignore */ }
 }
+
+export function loadMuted() {
+  try { return localStorage.getItem('hormuz-muted') === '1'; } catch { return false; }
+}
+
+export function saveMuted(muted) {
+  try { localStorage.setItem('hormuz-muted', muted ? '1' : '0'); } catch { /* ignore */ }
+}
