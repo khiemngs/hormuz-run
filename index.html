@@ -30,6 +30,12 @@
   #lock { position: absolute; top: 118px; left: 50%; transform: translateX(-50%); color: var(--red); font-family: 'Black Ops One', sans-serif; font-size: 28px; display: none; text-shadow: 0 0 12px var(--red); }
   #radio { bottom: 16px; left: 16px; max-width: min(480px, 70vw); font-size: 17px; opacity: 0; transition: opacity .3s; }
   #radio b { color: var(--amber); }
+  #tech { top: 168px; left: 14px; width: 260px; font: 500 12px ui-monospace, Menlo, monospace; line-height: 1.5; }
+  #tech .t { display: flex; justify-content: space-between; gap: 10px; white-space: nowrap; }
+  #tech .t b { font-weight: 700; color: #bfe7ff; }
+  #tech .h { margin-top: 6px; font-family: Rajdhani, sans-serif; }
+  #fpsGraph { display: block; width: 100%; height: 34px; margin: 4px 0 2px; border-radius: 4px; background: rgba(0,0,0,.35); }
+  @media (max-width: 760px) { #tech { display: none; } }
   #help { bottom: 16px; right: 16px; font-size: 14px; line-height: 1.55; text-align: right; opacity: .85; }
   kbd { display: inline-block; min-width: 22px; padding: 0 5px; border: 1px solid rgba(255,255,255,.35); border-bottom-width: 2px; border-radius: 4px; font: 700 12px Rajdhani, sans-serif; text-align: center; }
   #vignette { position: fixed; inset: 0; pointer-events: none; }
@@ -66,12 +72,17 @@
     <div class="row"><span class="lbl">Flares</span><b id="flares">3</b></div>
     <div class="row"><span class="lbl">Horn</span><b id="horn">READY</b></div>
   </div>
+  <div id="tech" class="panel">
+    <div class="lbl">Tech · <kbd>`</kbd> toggle</div>
+    <canvas id="fpsGraph" width="200" height="34"></canvas>
+    <div id="techBody"></div>
+  </div>
   <div id="banner"></div>
   <div id="lock">⚠ MISSILE LOCK ⚠</div>
   <div id="radio" class="panel"></div>
   <div id="help" class="panel">
     <kbd>W</kbd><kbd>S</kbd> throttle · <kbd>A</kbd><kbd>D</kbd> rudder<br>
-    <kbd>Space</kbd> flares · <kbd>H</kbd> horn · <kbd>P</kbd> pause
+    <kbd>Space</kbd> flares · <kbd>H</kbd> horn · <kbd>P</kbd> pause · <kbd>`</kbd> tech
   </div>
 </div>
 <div id="vignette"></div>
@@ -1473,11 +1484,100 @@ function showEnd(won) {
 // Input, resize, loop
 // ============================================================
 
+// ============================================================
+// Tech panel
+// ============================================================
+
+const tech = {
+  shown: true, frames: 0, acc: 0, fps: 0, ms: 0, worst: 0, cpu: 0, history: [], calls: 0, tris: 0, points: 0,
+  verts: 0, meshes: 0, objects: 0, sceneT: 1,
+};
+const gpuName = (() => {
+  const gl = renderer.getContext();
+  const ext = gl.getExtension('WEBGL_debug_renderer_info');
+  const name = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+  return String(name).replace(/^ANGLE \((.*)\)$/, '$1').split(',').slice(0, 2).join(',').slice(0, 34);
+})();
+
+// Scene walk is costly, so it runs a few times per second rather than every frame.
+function countScene() {
+  let verts = 0, meshes = 0, objects = 0;
+  scene.traverseVisible(o => {
+    objects++;
+    const pos = o.geometry?.attributes?.position;
+    if (!pos) return;
+    meshes++;
+    verts += o.isInstancedMesh ? pos.count * o.count : pos.count;
+  });
+  Object.assign(tech, { verts, meshes, objects });
+}
+
+function updateTech(dt, frameMs) {
+  if (!tech.shown) return;
+  const r = renderer.info.render;
+  tech.calls = r.calls; tech.tris = r.triangles; tech.points = r.points;
+  tech.frames++; tech.acc += dt; tech.cpu += frameMs;
+  tech.worst = Math.max(tech.worst, dt * 1000);
+  tech.sceneT -= dt;
+  if (tech.sceneT <= 0) { tech.sceneT = 0.5; countScene(); }
+  if (tech.acc < 0.25) return;
+
+  tech.fps = tech.frames / tech.acc;
+  tech.ms = tech.acc / tech.frames * 1000;
+  const cpu = tech.cpu / tech.frames, worst = tech.worst;
+  tech.history.push(tech.fps);
+  if (tech.history.length > 50) tech.history.shift();
+  tech.frames = 0; tech.acc = 0; tech.cpu = 0; tech.worst = 0;
+
+  const g = $('fpsGraph').getContext('2d'), W = 200, H = 34, bw = W / 50;
+  g.clearRect(0, 0, W, H);
+  tech.history.forEach((f, i) => {
+    g.fillStyle = f >= 55 ? '#4be37a' : f >= 30 ? '#ffb13b' : '#ff4b3a';
+    const h = Math.min(1, f / 120) * H;
+    g.fillRect(i * bw, H - h, bw - 1, h);
+  });
+  g.fillStyle = 'rgba(255,255,255,.25)';
+  g.fillRect(0, H - (60 / 120) * H, W, 1);
+
+  const mem = renderer.info.memory, buf = renderer.getDrawingBufferSize(new THREE.Vector2());
+  const heap = performance.memory ? `${(performance.memory.usedJSHeapSize / 1048576).toFixed(0)} MB` : 'n/a';
+  const alive = p => { let n = 0; for (let i = 0; i < p.max; i++) if (p.life[i] > 0) n++; return n; };
+  const fmt = n => n.toLocaleString();
+  const row = (k, v) => `<div class="t"><span>${k}</span><b>${v}</b></div>`;
+  $('techBody').innerHTML =
+    row('FPS', `${tech.fps.toFixed(0)}`) +
+    row('Frame / worst', `${tech.ms.toFixed(1)} / ${worst.toFixed(1)} ms`) +
+    row('CPU update+render', `${cpu.toFixed(2)} ms`) +
+    `<div class="lbl h">Render</div>` +
+    row('Draw calls', fmt(tech.calls)) +
+    row('Triangles', fmt(tech.tris)) +
+    row('Points (buffers)', fmt(tech.points)) +
+    row('Vertices (visible)', fmt(tech.verts)) +
+    row('Meshes / objects', `${fmt(tech.meshes)} / ${fmt(tech.objects)}`) +
+    row('Geometries', fmt(mem.geometries)) +
+    row('Textures', fmt(mem.textures)) +
+    row('Shader programs', fmt(renderer.info.programs?.length ?? 0)) +
+    `<div class="lbl h">Game</div>` +
+    row('Particles fx / smoke', `${fmt(alive(fx))} / ${fmt(alive(smoke))}`) +
+    row('Shells / missiles', `${shells.length} / ${crosses.length + homings.length}`) +
+    row('Boats / bullets', `${boats.length} / ${bullets.length}`) +
+    row('Mines / pickups', `${mines.length} / ${pickups.length}`) +
+    row('Floating cargo', flying.length) +
+    row('Intensity', state === 'play' ? intensity().toFixed(2) : '-') +
+    row('Ship x / z', `${ship.x.toFixed(0)} / ${ship.z.toFixed(0)}`) +
+    `<div class="lbl h">System</div>` +
+    row('Resolution', `${buf.x}×${buf.y} @${renderer.getPixelRatio()}x`) +
+    row('JS heap', heap) +
+    row('Three.js', `r${THREE.REVISION}`) +
+    `<div style="opacity:.7;margin-top:2px">${gpuName}</div>`;
+}
+
 const KEYMAP = { arrowup: 'w', arrowdown: 's', arrowleft: 'a', arrowright: 'd' };
 addEventListener('keydown', e => {
   const k = KEYMAP[e.key.toLowerCase()] || e.key.toLowerCase();
   keys[k] = true;
   if (k === ' ' || k.startsWith('arrow')) e.preventDefault();
+  if (k === '`') { tech.shown = !tech.shown; $('tech').style.display = tech.shown ? '' : 'none'; }
   if (state === 'play') {
     if (k === ' ') deployFlares();
     if (k === 'h') horn();
@@ -1507,6 +1607,7 @@ showMenu();
 let last = performance.now();
 function loop(now) {
   requestAnimationFrame(loop);
+  const t0 = performance.now();
   let dt = Math.min(0.05, (now - last) / 1000);
   last = now;
   if (paused) dt = 0;
@@ -1521,7 +1622,10 @@ function loop(now) {
   updateCamera(dt);
   updateHUD(dt);
   renderer.render(scene, camera);
+  updateTech((now - lastTech) / 1000, performance.now() - t0);
+  lastTech = now;
 }
+let lastTech = performance.now();
 requestAnimationFrame(loop);
 </script>
 </body>
